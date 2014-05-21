@@ -572,9 +572,45 @@ class MaltegoTransformRequestMessage(MaltegoElement):
         return self._canari_fields
 
 
+class TransformApplication(MaltegoElement):
+    name = fields_.String(attrname='name')
+
+    requireapikey = fields_.Boolean(attrname='requireAPIKey', default=False)
+    registrationurl = fields_.String(attrname='registrationURL', required=False)
+    url = fields_.String(attrname='URL')
+
+class OtherSeedServer(MaltegoElement):
+    # TODO: Implement...
+    pass
+
+
+
+class MaltegoTransformDiscoveryMessage(MaltegoElement):
+    source = fields_.String(attrname='source')
+
+    applications = fields_.List(TransformApplication,
+                                tagname='TransformApplications', required=False)
+    other_seeds = fields_.List(OtherSeedServer, tagname='OtherSeedServers',
+                               required=False)
+
+
+    def appendelement(self, other):
+        if isinstance(other, TransformApplication):
+            self.applications.append(other)
+        elif isinstance(other, OtherSeedServer):
+            self.other_seeds.append(other)
+
+    def removeelement(self, other):
+        if isinstance(other, TransformApplication):
+            self.applications.remove(other)
+        elif isinstance(other, OtherSeedServer):
+            self.other_seeds.remove(other)
+
+
 class MaltegoMessage(MaltegoElement):
     message = fields_.Choice(
         fields_.Model(MaltegoTransformExceptionMessage),
         fields_.Model(MaltegoTransformResponseMessage),
-        fields_.Model(MaltegoTransformRequestMessage)
+        fields_.Model(MaltegoTransformRequestMessage),
+        fields_.Model(MaltegoTransformDiscoveryMessage)
     )
