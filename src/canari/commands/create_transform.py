@@ -68,6 +68,7 @@ def create_transform(args):
         exit(-1)
 
     values = project_metadata()
+    values['transformname'] = opts.transform
 
     write_template(
         transformf,
