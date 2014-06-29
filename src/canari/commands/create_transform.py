@@ -3,7 +3,7 @@
 import os
 import re
 
-from common import write_template, read_template, canari_main, init_pkg, project_tree
+from common import write_template, read_template, canari_main, project_metadata, project_tree
 from framework import SubCommand, Argument
 
 __author__ = 'Nadeem Douba'
@@ -67,7 +67,7 @@ def create_transform(args):
         print ('Transform %s already exists... quitting' % repr(transformf))
         exit(-1)
 
-    values = init_pkg()
+    values = project_metadata()
 
     write_template(
         transformf,

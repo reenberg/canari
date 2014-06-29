@@ -141,7 +141,7 @@ def import_package(package):
     return __import__(package, globals(), locals(), ['*'])
 
 
-def init_pkg():
+def project_metadata():
     # project_root will raise an exception if it can't find the project root.
     root = project_root()
 

@@ -3,7 +3,7 @@
 import os
 import re
 
-from common import write_template, read_template, canari_main, init_pkg, project_tree
+from common import write_template, read_template, canari_main, project_tree
 from framework import SubCommand, Argument
 
 __author__ = 'Nadeem Douba'
