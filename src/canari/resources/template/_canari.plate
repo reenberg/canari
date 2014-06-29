@@ -1,6 +1,8 @@
 [metadata]
 
-author = ${author}
+package = ${package}
 project = ${project}
-maintainer = ${maintainer}
+author = ${author}
+namespace = ${namespace}
 email = ${email}
+maintainer = ${maintainer}
