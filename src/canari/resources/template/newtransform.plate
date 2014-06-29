@@ -3,6 +3,9 @@
 from canari.maltego.utils import debug, progress
 from canari.framework import configure #, superuser
 
+# Import entities
+from canari.maltego.entities import Person
+
 __author__ = '${author}'
 __copyright__ = 'Copyright ${year}, ${project} Project'
 __credits__ = []
@@ -18,18 +21,21 @@ __all__ = [
     'onterminate' # comment out this line if you don't need this function.
 ]
 
-
-"""
-TODO: set the appropriate configuration parameters for your transform.
-TODO: Uncomment the line below if the transform needs to run as super-user
-"""
+# TODO: Uncomment the line below if the transform needs to run as super-user
 #@superuser
 @configure(
-    label='TODO: To Something [Hello World]',
-    description='TODO: Returns a Something entity with the phrase "Hello Word!"',
-    uuids=[ 'TODO something.v2.SomethingToPhrase_HelloWorld' ],
-    inputs=[ ( 'TODO: Some Set', SomethingEntity ) ],
-    debug=True
+    # TODO: Verify the below fields
+    owner='${author}',
+    label='To ${transformname} [${namespace}]',
+    description='...',
+    #disclaimer='', # Disclaimer is optional
+    spec = [
+        ('${namespace}.v2.Person_${transformname}', Person,
+         ['${namespace} transform set'])
+    ],
+    #outputs = ['Any'], # Output entities is optional
+    debug=True,
+    remote=False,
 )
 def dotransform(request, response, config):
     """

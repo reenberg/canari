@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
-from canari.maltego.entities import Person
 from canari.maltego.utils import debug, progress
 from canari.framework import configure #, superuser
+
+# Import entities
+from canari.maltego.entities import Person
 from common.entities import ${entity}
 
 __author__ = '${author}'
@@ -20,29 +22,78 @@ __all__ = [
     'onterminate'
 ]
 
-# Uncomment the line below if the transform needs to run as super-user
+# TODO: Uncomment the line below if the transform needs to run as super-user
 #@superuser
-"""
-The @configure decorator tells mtginstall how to install the transform in Maltego. It takes the following parameters:
-    - label:        the name of the transform as it appears in the Maltego UI transform selection menu
-    - description:  a short description of the transform
-    - uuids:        a list of unique transform IDs, one per input type. The order of this list must match that of the 
-                    inputs parameter. Make sure you account for entity type inheritance in Maltego. For example, if you
-                    choose a DNSName entity type as your input type you do not need to specify it again for MXRecord, 
-                    NSRecord, etc.
-    - inputs:       a list of tuples where the first item is the name of the transform set the transform should be part
-                    of, and the second item is the input entity type.
-    - debug:        Whether or not the debugging window should appear in Maltego's UI when running the transform.
-    - remote:       Whether or not the transform can be used as a remote transform in Plume.
+"""The @configure decorator takes the following parameters:
+
+  - owner: The name of the owner of this transformation.
+
+    Note: Author information is generated from the modules __author__,
+    __maintainer__ and __email__ variables.
+
+  - label: The name of the transform as it appears in the Maltego UI transform
+      selection menu
+
+  - description: a short description of the transform
+
+  - disclaimer: Optional disclaimer. The user will have to accept this in the
+      Maltego UI when run for the first time.
+
+  - spec: Specificationlist describing the transformation.  The specification is
+      a triple consisting of a unique identified, the input entitty that the
+      transform should work on and a list of transform sets that the transform
+      should be part of:
+
+        [('uuid', input, ['set1', 'set2', ...]), ...]
+
+    - Unique identifier: Must be a unique string.  If Maltego sees two
+        transformations with the same id it will treat them as the same and only
+        reconize one of them.  This is what Maltego calls transformname, it is
+        however not shown to the user.
+
+    - Input: The input entity for which this transform will be shown in the
+        Maltego UI transform selection menu.  Note that Maltego will also show
+        this transform for all entities that enherit from the specified entity.
+        For example defining a transformation for DNSName will also be shown for
+        MXRecord and NSRecord.
+
+    - Transform sets: A list of strings, describing the transform sets that this
+      transformation should be listed in.
+
+
+    Note: The TransformDistribution() will return a list of (unique) transforms for
+    each element in this specification list.  Each element returned in the list
+    will get the following variables set: 'uuid', 'input' and 'transformsets',
+    acording to what was specified in the respective specification.
+
+  - outputs: A list of output entities returned by this transformation.  This is
+      optional, and doesn't seem to have any affect, other than informing the
+      user when looking in the list of transforms in the Maltego UI.
+
+  - debug: Whether or not the debugging window should appear in Maltego's UI
+      when running the transform. This only apply to local transformations.
+
+  - remote: If true, the transform will be served by a transform application
+      server, if the transform package is loaded in.
+
+  Note: Version information is generated from the modules __version__ variable.
+
+
 TODO: set the appropriate configuration parameters for your transform.
+
 """
 @configure(
-    label='To ${entity} [Hello World]',
+    owner='${author}',
+    label='To ${entity} [${namespace}]',
     description='Returns a ${entity} entity with the phrase "Hello Word!"',
-    uuids=[ '${namespace}.v2.${entity}ToPhrase_HelloWorld' ],
-    inputs=[ ( '${project}', Person ) ],
+    #disclaimer='', # Disclaimer is optional
+    spec = [
+        ('${namespace}.v2.Person_HelloWorld', Person,
+         ['HelloWorld transform set'])
+    ],
+    #outputs = [${entity}], # Output entities is optional
+    debug=True,
     remote=False,
-    debug=True
 )
 def dotransform(request, response, config):
     """
@@ -59,6 +110,8 @@ def dotransform(request, response, config):
 
     The response object is a container for output entities, UI messages, and exception messages. The config object
     contains a key-value store of the configuration file.
+
+
     TODO: write your data mining logic below.
     """
 
@@ -86,7 +139,7 @@ def dotransform(request, response, config):
 Called if transform interrupted. It's presence is optional; you can remove this function if you don't need to do any
 resource clean up.
 
-TODO: Write your cleanup logic below or delete the onterminate function and remove it from the __all__ variable 
+TODO: Write your cleanup logic below or delete the onterminate function and remove it from the __all__ variable
 """
 def onterminate():
     debug('Caught signal... exiting.')
