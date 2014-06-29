@@ -142,28 +142,17 @@ def import_package(package):
 
 
 def init_pkg():
+    # project_root will raise an exception if it can't find the project root.
     root = project_root()
 
-    if root is not None:
-        conf = os.path.join(root, '.canari')
-        if os.path.exists(conf):
-            c = CanariConfigParser()
-            c.read(conf)
-            return {
-                'author': c['metadata/author'],
-                'email': c['metadata/email'],
-                'maintainer': c['metadata/maintainer'],
-                'project': c['metadata/project'],
-                'year': datetime.now().year
-            }
-
-    return {
-        'author': '',
-        'email': '',
-        'maintainer': '',
-        'project': '',
-        'year': datetime.now().year
-    }
+    conf = os.path.join(root, '.canari')
+    if os.path.exists(conf):
+        c = CanariConfigParser()
+        c.read(conf)
+        res = {}
+        res.update(c.items('metadata'))
+        res.update({'year': datetime.now().year})
+        return res
 
 
 def project_root():
