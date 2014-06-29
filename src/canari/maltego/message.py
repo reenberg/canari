@@ -584,7 +584,6 @@ class OtherSeedServer(MaltegoElement):
     pass
 
 
-
 class MaltegoTransformDiscoveryMessage(MaltegoElement):
     source = fields_.String(attrname='source')
 
@@ -607,10 +606,67 @@ class MaltegoTransformDiscoveryMessage(MaltegoElement):
             self.other_seeds.remove(other)
 
 
+class Transform(MaltegoElement):
+    owner = fields_.String(attrname='owner')
+    maxinput = fields_.Integer(attrname='MaxEntityInputCount') # TODO: is int?
+    maxoutput = fields_.Integer(attrname='MaxEntityOutputCount')  # TODO: is int?
+    description = fields_.String(attrname='Description')
+    locationrelevance = fields_.String(attrname='LocationRelevance')
+    disclaimer = fields_.String(attrname='Disclaimer', required=False)
+    author = fields_.String(attrname='Author')
+    displayname = fields_.String(attrname='UIDisplayName')
+    transformname = fields_.String(attrname='TransformName')
+    version = fields_.String(attrname='Version')
+    # TODO: Add debug field?
+
+    outputentities = fields_.List(fields_.String(tagname='OutputEntity'),
+                                  tagname='OutputEntities')
+    inputentity = fields_.String(tagname='InputEntity')
+
+    # TODO: Implement this...
+    #UIInputRequirements
+
+    def __init__(self, transform=None, **kwargs):
+        if transform:
+            # Set attributes and tags from the given transform.
+            self.maxinput = 0
+            self.maxoutput = 0
+            self.locationrelevance = 'global'
+
+            self.author = getattr(transform, '__author__', '') # TODO: Add maintainer info and email.
+            self.owner = getattr(transform.dotransform, 'owner', '')
+
+            self.displayname = transform.dotransform.label # Mandatory field
+            self.description = getattr(transform.dotransform, 'description', '')
+            self.disclaimer = getattr(transform.dotransform, 'disclaimer', '')
+
+            self.transformname = transform.dotransform.uuids[0] # TODO: Handle multiple input methods.
+            self.outputentities = getattr(transform.dotransform, 'outputentities', ['Any'])
+            self.inputentity = transform.dotransform.inputs[0][1].__name__ # TODO: FIX
+
+            self.version = getattr(transform, '__version__', '') # Default to empty version
+
+        super(Transform, self).__init__(**kwargs)
+
+
+class MaltegoTransformListMessage(MaltegoElement):
+    transforms = fields_.List(Transform,
+                              tagname='Transforms', required=False)
+
+    def appendelement(self, other):
+        if isinstance(other, Transform):
+            self.transforms.append(other)
+
+    def removeelement(self, other):
+        if isinstance(other, Transform):
+            self.transforms.remove(other)
+
+
 class MaltegoMessage(MaltegoElement):
     message = fields_.Choice(
         fields_.Model(MaltegoTransformExceptionMessage),
         fields_.Model(MaltegoTransformResponseMessage),
         fields_.Model(MaltegoTransformRequestMessage),
-        fields_.Model(MaltegoTransformDiscoveryMessage)
+        fields_.Model(MaltegoTransformDiscoveryMessage),
+        fields_.Model(MaltegoTransformListMessage)
     )
