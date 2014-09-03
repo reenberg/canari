@@ -543,13 +543,12 @@ class Entity(object):
 
 
 class MaltegoTransformRequestMessage(MaltegoElement):
-    entities = fields_.List(_Entity, tagname='Entities', required=False)
+    entities = fields_.List(_Entity, tagname='Entities')
     parameters = fields_.Dict(Field, tagname='TransformFields', key='name', required=False)
     limits = fields_.Model(Limits, required=False)
 
     def __init__(self, **kwargs):
         super(MaltegoTransformRequestMessage, self).__init__(**kwargs)
-        self._canari_fields = dict([(f.name, f.value) for f in self.entity.fields.values()])
 
     @property
     def entity(self):
