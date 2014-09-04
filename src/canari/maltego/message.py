@@ -543,13 +543,12 @@ class Entity(object):
 
 
 class MaltegoTransformRequestMessage(MaltegoElement):
-    entities = fields_.List(_Entity, tagname='Entities', required=False)
+    entities = fields_.List(_Entity, tagname='Entities')
     parameters = fields_.Dict(Field, tagname='TransformFields', key='name', required=False)
     limits = fields_.Model(Limits, required=False)
 
     def __init__(self, **kwargs):
         super(MaltegoTransformRequestMessage, self).__init__(**kwargs)
-        self._canari_fields = dict([(f.name, f.value) for f in self.entity.fields.values()])
 
     @property
     def entity(self):
@@ -572,9 +571,139 @@ class MaltegoTransformRequestMessage(MaltegoElement):
         return self._canari_fields
 
 
+class TransformApplication(MaltegoElement):
+    name = fields_.String(attrname='name')
+
+    requireapikey = fields_.Boolean(attrname='requireAPIKey', default=False)
+    registrationurl = fields_.String(attrname='registrationURL', required=False)
+    url = fields_.String(attrname='URL')
+
+class OtherSeedServer(MaltegoElement):
+    # TODO: Implement...
+    pass
+
+
+class MaltegoTransformDiscoveryMessage(MaltegoElement):
+    source = fields_.String(attrname='source')
+
+    applications = fields_.List(TransformApplication,
+                                tagname='TransformApplications', required=False)
+    other_seeds = fields_.List(OtherSeedServer, tagname='OtherSeedServers',
+                               required=False)
+
+
+    def appendelement(self, other):
+        if isinstance(other, TransformApplication):
+            self.applications.append(other)
+        elif isinstance(other, OtherSeedServer):
+            self.other_seeds.append(other)
+
+    def removeelement(self, other):
+        if isinstance(other, TransformApplication):
+            self.applications.remove(other)
+        elif isinstance(other, OtherSeedServer):
+            self.other_seeds.remove(other)
+
+
+class Input(MaltegoElement):
+    """Elements for UIInputRequirements
+
+    Input of type 'string' with an empty or non-existing defaultvalue will act
+    as a popup, when they are non-optional.
+
+    """
+
+    name = fields_.String(attrname='Name')
+    type = fields_.String(attrname='Type') # 'int' or 'string'
+    display = fields_.String(attrname='Display')
+    defaultvalue = fields_.String(attrname='DefaultValue', required=False)
+    optional = fields_.Boolean(attrname='Optional', default=False)
+
+    def __init__(self, **kwargs):
+        self.name = kwargs['name']
+        self.type = kwargs['type']
+        self.display = kwargs['display']
+
+        attr = kwargs.get('defaultvalue', None)
+        if attr is not None: self.defaultvalue = attr
+
+        attr = kwargs.get('optional', None)
+        if attr is not None: self.optional = attr
+
+
+class Transform(MaltegoElement):
+    owner = fields_.String(attrname='owner')
+    author = fields_.String(attrname='Author')
+    version = fields_.String(attrname='Version') # Required field though Paterva TDS lists it as optional
+    maxinput = fields_.Integer(attrname='MaxEntityInputCount')
+    maxoutput = fields_.Integer(attrname='MaxEntityOutputCount')
+    locationrelevance = fields_.String(attrname='LocationRelevance')
+    description = fields_.String(attrname='Description', required=False)
+    disclaimer = fields_.String(attrname='Disclaimer', required=False)
+    displayname = fields_.String(attrname='UIDisplayName')
+    transformname = fields_.String(attrname='TransformName')
+    inputrequirements = fields_.List(Input, tagname='UIInputRequirements')
+    outputentities = fields_.List(fields_.String(tagname='OutputEntity'),
+                                  tagname='OutputEntities')
+    inputentity = fields_.String(tagname='InputEntity')
+
+    def __init__(self, transform=None, **kwargs):
+        if transform:
+            # - Mandatory fields have no error handling.
+            # - Optional fields test whether the attribute exists.
+
+            self.owner = transform.dotransform.owner
+            self.author = transform.__author__ # TODO: Add maintainer info and email.
+            self.version = transform.__version__
+            self.maxinput = 0
+            self.maxoutput = 0
+            self.locationrelevance = 'global'
+            self.displayname = transform.dotransform.label
+
+            attr = getattr(transform.dotransform, 'description', None)
+            if attr is not None: self.description = attr
+
+            attr = getattr(transform.dotransform, 'disclaimer', None)
+            if attr is not None: self.disclaimer = attr
+
+            self.transformname = transform.dotransform.uuids[0] # TODO: Handle multiple input methods.
+            self.inputentity = transform.dotransform.inputs[0][1].__name__ # TODO: FIX
+            self.outputentities = getattr(transform.dotransform, 'outputentities', ['Any'])
+
+            attr = getattr(transform.dotransform, 'inputrequirements', None)
+            if attr is not None:
+                for elem in attr: self.appendelement(Input(**elem))
+
+
+        super(Transform, self).__init__(**kwargs)
+
+    def appendelement(self, other):
+        if isinstance(other, Input):
+            self.inputrequirements.append(other)
+
+    def removeelement(self, other):
+        if isinstance(other, Input):
+            self.inputrequirements.remove(other)
+
+
+class MaltegoTransformListMessage(MaltegoElement):
+    transforms = fields_.List(Transform,
+                              tagname='Transforms', required=False)
+
+    def appendelement(self, other):
+        if isinstance(other, Transform):
+            self.transforms.append(other)
+
+    def removeelement(self, other):
+        if isinstance(other, Transform):
+            self.transforms.remove(other)
+
+
 class MaltegoMessage(MaltegoElement):
     message = fields_.Choice(
         fields_.Model(MaltegoTransformExceptionMessage),
         fields_.Model(MaltegoTransformResponseMessage),
-        fields_.Model(MaltegoTransformRequestMessage)
+        fields_.Model(MaltegoTransformRequestMessage),
+        fields_.Model(MaltegoTransformDiscoveryMessage),
+        fields_.Model(MaltegoTransformListMessage)
     )
