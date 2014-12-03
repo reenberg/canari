@@ -21,10 +21,13 @@ __all__ = [
 class MaltegoElement(Model):
 
     class meta:
-        # Fix stupid defaults in safedexml. We are dealing with ordinarry XML so
-        # threat it that way
-        case_sensitive = False
+        # Fix defaults in safedexml.  We don't have schema so don't enforce
+        # ordering on the elements.  If we enforce order, then the order of tags
+        # in the parsed XML needs to match the order that fields are declared in
+        # their respective Python classes.  We keep the default of having case
+        # sensitive tags, as XML elements are case sensitive!
         order_sensitive = False
+        #case_sensitive = True
 
 
     def __add__(self, other):
